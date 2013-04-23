@@ -1,109 +1,80 @@
-This repository was initially created to reproduce the error believed to be
-https://github.com/jruby/warbler/issues/144
+This repository is a fork of https://github.com/doxavore/warbler144, which was initially created to reproduce the error believed to be
+https://github.com/jruby/warbler/issues/144. I'm using the fork to reproduce the issue.
 
-Since then, it seems this may be an entirely different issue.
+I can demonstrate this issue most effectively by showing how warbler improperly packages the bundler gem for bundler v=1.3.5 while generating the correctly packaged gem directory structure for bundler -v=1.2.4.
 
-Tested Environments
+Note that this issue only manifests when bundler is run in '--deployment' mode.
+
+Tested Environment
 -------------------
-Tested and fails with the following configuration:
-* Ubuntu 12.10
- * `uname -a`: Linux bohr 3.5.0-27-generic #46-Ubuntu SMP Mon Mar 25 19:58:17 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux
-  * rbenv 0.4.0-20-ga7da069 (and no rbenv/rvm-type environment)
-  * JRuby 1.7.2 (on Oracle Java 7 and OpenJDK 7)
-    * jruby 1.7.2 (1.9.3p327) 2013-01-04 302c706 on OpenJDK 64-Bit Server VM 1.7.0_15-b20 [linux-amd64]
-    * jruby 1.7.2 (1.9.3p327) 2013-01-04 302c706 on Java HotSpot(TM) 64-Bit Server VM 1.7.0_21-b11 [linux-amd64]
-  * RubyGems 1.8.23 (packaged with JRuby 1.7.2)
-  * Bundler 1.2.3 and 1.3.5
-  * Warbler 1.3.6 and master (at cfb3cae)
+Tested with the following configuration:
+* OS X 10.8.3
+ * `uname -a`: Darwin nonesuch.pop.umn.edu 12.3.0 Darwin Kernel Version 12.3.0: Sun Jan  6 22:37:10 PST 2013; root:xnu-2050.22.13~1/RELEASE_X86_64 x86_64
+* rvm 1.19.6 (master) by Wayne E. Seguin <wayneeseguin@gmail.com>, Michal Papis <mpapis@gmail.com> [https://rvm.io/]
+* `jruby -v`: jruby 1.7.3 (1.9.3p385) 2013-02-21 dac429b on Java HotSpot(TM) 64-Bit Server VM 1.7.0_17-b02 [darwin-x86_64]
+* Bundler 1.2.4 and 1.3.5
+* Warbler 1.3.6
 
-This exact jar (and generating/running a new one) works perfectly on OS X 10.8,
-running under a similar software configuration.
 
-To Reproduce
+Properly Packaged Bundler Gem (bundler -v=1.2.4):
 ------------
-Create the jar with:
+Uninstall existing versions of bundler and executables. Then install bundler -v=1.2.4:
 ```
-bundle
-bundle exec warble
-```
-
-And attempt to execute it with:
-```
-java -jar myapp.jar
+gem uninstall -ax bundler && gem install bundler -v=1.2.4
 ```
 
-Results in the following error:
+cd to the repos root directory and create the jar with:
 ```
-LoadError: no such file to load -- bundler/index
-      fetch_specs at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/source/rubygems.rb:165
-            specs at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/source/rubygems.rb:67
-  __materialize__ at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/lazy_specification.rb:52
-      materialize at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/spec_set.rb:88
-             map! at org/jruby/RubyArray.java:2393
-      materialize at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/spec_set.rb:85
-            specs at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/definition.rb:114
-        specs_for at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/definition.rb:159
-  requested_specs at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/definition.rb:148
-  requested_specs at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/environment.rb:18
-            setup at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/runtime.rb:13
-            setup at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler.rb:120
-           (root) at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/setup.rb:7
-          require at org/jruby/RubyKernel.java:1027
-           (root) at jar:file:/tmp/jruby3400189217262200171extract/jruby-stdlib-1.7.2.jar!/META-INF/jruby.home/lib/ruby/shared/rubygems/custom_require.rb:1
-          require at jar:file:/tmp/jruby3400189217262200171extract/jruby-stdlib-1.7.2.jar!/META-INF/jruby.home/lib/ruby/shared/rubygems/custom_require.rb:36
-          require at org/jruby/RubyKernel.java:1027
-           (root) at file:/home/doug/projects/warbler144/myapp.jar!/warbler144/config/boot.rb:13
-           (root) at jar:file:/tmp/jruby3400189217262200171extract/jruby-stdlib-1.7.2.jar!/META-INF/jruby.home/lib/ruby/shared/rubygems/custom_require.rb:1
-          require at org/jruby/RubyKernel.java:1027
-          require at jar:file:/tmp/jruby3400189217262200171extract/jruby-stdlib-1.7.2.jar!/META-INF/jruby.home/lib/ruby/shared/rubygems/custom_require.rb:36
-           (root) at file:/home/doug/projects/warbler144/myapp.jar!/warbler144/config/application.rb:1
-             load at org/jruby/RubyKernel.java:1046
-           (root) at jar:file:/tmp/jruby3400189217262200171extract/jruby-stdlib-1.7.2.jar!/META-INF/jruby.home/lib/ruby/shared/rubygems/custom_require.rb:1
-          require at org/jruby/RubyKernel.java:1027
-          require at jar:file:/tmp/jruby3400189217262200171extract/jruby-stdlib-1.7.2.jar!/META-INF/jruby.home/lib/ruby/shared/rubygems/custom_require.rb:36
-           (root) at file:/home/doug/projects/warbler144/myapp.jar!/warbler144/bin/myapp:3
+bundle --deployment && bundle exec warble
 ```
 
-I can get around this error with either of these in `config/boot.rb`:
+Now examine the structure of the packaged bundler gem:
 ```
-# Requiring the otherwise-autoload file
-require "bundler/index"
+mkdir -p bundler-1.2.4 && mv myapp.jar bundler-1.2.4 && cd bundler-1.2.4 && jar xf myapp.jar
 
-# Referencing it at all (outside of Bundler)
-Bundler::Index
-```
-
-After that, I move on to not finding `bundler/remote_specification`:
-```
-LoadError: no such file to load -- bundler/remote_specification
-     local_search at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/index.rb:60
-           search at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/index.rb:45
-  __materialize__ at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/lazy_specification.rb:52
-      materialize at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/spec_set.rb:88
-             map! at org/jruby/RubyArray.java:2393
-      materialize at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/spec_set.rb:85
-            specs at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/definition.rb:114
-        specs_for at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/definition.rb:159
-  requested_specs at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/definition.rb:148
-  requested_specs at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/environment.rb:18
-            setup at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/runtime.rb:13
-            setup at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler.rb:120
-           (root) at jar:file:/home/doug/projects/warbler144/myapp.jar!/gems/bundler-1.3.5/lib/bundler/setup.rb:7
-          require at org/jruby/RubyKernel.java:1027
-           (root) at jar:file:/tmp/jruby4391549950748599828extract/jruby-stdlib-1.7.2.jar!/META-INF/jruby.home/lib/ruby/shared/rubygems/custom_require.rb:1
-          require at jar:file:/tmp/jruby4391549950748599828extract/jruby-stdlib-1.7.2.jar!/META-INF/jruby.home/lib/ruby/shared/rubygems/custom_require.rb:36
-          require at org/jruby/RubyKernel.java:1027
-           (root) at file:/home/doug/projects/warbler144/myapp.jar!/warbler144/config/boot.rb:13
-           (root) at jar:file:/tmp/jruby4391549950748599828extract/jruby-stdlib-1.7.2.jar!/META-INF/jruby.home/lib/ruby/shared/rubygems/custom_require.rb:1
-          require at org/jruby/RubyKernel.java:1027
-          require at jar:file:/tmp/jruby4391549950748599828extract/jruby-stdlib-1.7.2.jar!/META-INF/jruby.home/lib/ruby/shared/rubygems/custom_require.rb:36
-           (root) at file:/home/doug/projects/warbler144/myapp.jar!/warbler144/config/application.rb:1
-             load at org/jruby/RubyKernel.java:1046
-           (root) at jar:file:/tmp/jruby4391549950748599828extract/jruby-stdlib-1.7.2.jar!/META-INF/jruby.home/lib/ruby/shared/rubygems/custom_require.rb:1
-          require at org/jruby/RubyKernel.java:1027
-          require at jar:file:/tmp/jruby4391549950748599828extract/jruby-stdlib-1.7.2.jar!/META-INF/jruby.home/lib/ruby/shared/rubygems/custom_require.rb:36
-           (root) at file:/home/doug/projects/warbler144/myapp.jar!/warbler144/bin/myapp:3
+ls -l gems/bundler-1.2.4/
+total 144
+-rw-rw-r--   1 peterson  staff  40053 Apr 23 08:36 CHANGELOG.md
+-rw-rw-r--   1 peterson  staff   2757 Apr 23 08:36 ISSUES.md
+-rw-rw-r--   1 peterson  staff   1115 Apr 23 08:36 LICENSE
+-rw-rw-r--   1 peterson  staff   1490 Apr 23 08:36 README.md
+-rw-rw-r--   1 peterson  staff   6549 Apr 23 08:36 Rakefile
+-rw-rw-r--   1 peterson  staff   4175 Apr 23 08:36 UPGRADING.md
+drwxrwxr-x   3 peterson  staff    102 Apr 23 08:36 bin
+-rw-rw-r--   1 peterson  staff   1243 Apr 23 08:36 bundler.gemspec
+drwxrwxr-x   4 peterson  staff    136 Apr 23 08:36 lib
+drwxrwxr-x  11 peterson  staff    374 Apr 23 08:36 man
+drwxrwxr-x   2 peterson  staff     68 Apr 23 08:36 spec
 ```
 
-This repeats for all of the other files listed in `config/boot.rb`. If all of
-them are required explicitly before `bundler/setup`, everything works.
+In the above case, the packaged bundler gem has the expected structure (e.g. bin and lib directories are present).
+
+Improperly packaged bundler gem (bundler -v=1.3.5):
+------------
+Uninstall existing versions of bundler and executables. Then install bundler -v=1.3.5:
+```
+gem uninstall -ax bundler && gem install bundler -v=1.3.5
+```
+
+cd to the root directory and create the jar with:
+```
+bundle --deployment && bundle exec warble
+```
+
+Now examine the structure of the package bundler gem:
+```
+mkdir -p bundler-1.3.5 && mv myapp.jar bundler-1.3.5 && cd bundler-1.3.5 && jar xf myapp.jar
+
+ls -l gems/bundler-1.3.5/
+total 24
+drwxrwxr-x  51 peterson  staff   1734 Apr 23 08:55 bundler
+-rw-rw-r--   1 peterson  staff  11965 Apr 23 08:55 bundler.rb
+```
+
+Note that the packaged bundler gem now has the wrong directory structure (e.g lib and bin directories are missing).
+
+Conclusion:
+------------
+When a dependency bundle has been installed in '--deployment' mode with bundler -v=1.3.5, warbler incorrectly packages the bundler gem in both jar and war files. In fact, warbler produces this broken directory structure for any version of bundler in the 1.3.x series. Warbler behaves appropriately in this regard when used in conjunction with bundler 1.2.x.
+
+I've been able to show that this mangled directory structure leads directly to the "No such file to load -- bundler/setup" errors we're seeing when attempting to deploy our webapp to Tomcat.
