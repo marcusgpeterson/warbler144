@@ -16,7 +16,7 @@ Tested with the following configuration:
 * Warbler 1.3.6
 
 
-Properly Packaged Bundler Gem (bundler -v=1.2.4):
+Properly Packaged Bundler Gem (bundler -v=1.2.4)
 ------------
 Uninstall existing versions of bundler and executables. Then install bundler -v=1.2.4:
 ```
@@ -49,7 +49,7 @@ drwxrwxr-x   2 peterson  staff     68 Apr 23 08:36 spec
 
 In the above case, the packaged bundler gem has the expected structure (e.g. bin and lib directories are present).
 
-Improperly packaged bundler gem (bundler -v=1.3.5):
+Improperly Packaged Bundler Gem (bundler -v=1.3.5)
 ------------
 Uninstall existing versions of bundler and executables. Then install bundler -v=1.3.5:
 ```
@@ -73,7 +73,7 @@ drwxrwxr-x  51 peterson  staff   1734 Apr 23 08:55 bundler
 
 Note that the packaged bundler gem now has the wrong directory structure (e.g lib and bin directories are missing).
 
-Conclusion:
+Conclusion
 ------------
 When a dependency bundle has been installed in '--deployment' mode with bundler -v=1.3.5, warbler incorrectly packages the bundler gem in both jar and war files. In fact, warbler produces this broken directory structure for any version of bundler in the 1.3.x series. Warbler behaves appropriately in this regard when used in conjunction with bundler 1.2.x.
 
